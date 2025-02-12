@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Görüntü İşleme Uygulaması</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #f7fafc;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #5f27cd;
+        }
+
+        .form-check-label {
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+
+        .btn {
+            background-color: #5f27cd;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #4e1fbf;
+            transform: scale(1.05);
+        }
+
+        .file-upload-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .file-upload-container input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-container label {
+            background-color: #4e1fbf;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-container label:hover {
+            background-color: #5f27cd;
+            transform: scale(1.05);
+        }
+
+        #video, #outputImage, #originalImage {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #video {
+            display: none;
+        }
+
+        .result {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .result h4 {
+            font-size: 1.5rem;
+            color: #2d3748;
+        }
+
+        .loader {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loader i {
+            font-size: 3rem;
+            color: #5f27cd;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-name {
+            font-size: 1rem;
+            margin-top: 10px;
+            color: #2d3748;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .image-box {
+            text-align: center;
+            width: 48%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Görüntü İşleme Uygulaması</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="image" class="form-label">Resim Yükle veya Kamera Kullan</label>
+            <div class="file-upload-container">
+                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                <label for="image"><i class="fas fa-upload"></i> Resim Seç</label>
+            </div>
+            <span id="fileName" class="file-name"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="type" class="form-label">İşlem Türü</label>
+            <select class="form-select" id="type" name="type" required>
+                <option value="edges">Canny Edge Detection</option>
+                <option value="blur">Gaussian Blur</option>
+                <option value="grayscale">Grayscale</option>
+                <option value="invert">Invert Colors</option>
+                <option value="corner_harris">Harris Köşe Algılama</option>
+                <option value="sobel">Sobel Kenar Bulma</option>
+                <option value="laplacian">Laplacian Kenar Bulma</option>
+                <option value="prewitt">Prewitt Kenar Bulma</option>
+                <option value="roberts">Roberts Kenar Bulma</option>
+                <option value="erosion">Erosion (Aşındırma)</option>
+                <option value="shi_tomasi">Shi-Tomasi Köşe Algılama</option>
+            </select>
+        </div>
+
+        <div class="form-group form-check">
+            <input class="form-check-input" type="checkbox" id="useCamera">
+            <label class="form-check-label" for="useCamera">Kamerayı Kullan</label>
+        </div>
+
+        <button type="submit" class="btn">İşle</button>
+    </form>
+
+    <div class="loader" id="loader">
+        <i class="fas fa-spinner"></i>
+    </div>
+
+    <div class="result" id="result">
+        <h4>İşlenmiş Görüntü</h4>
+        <div class="image-container">
+            <div class="image-box">
+                <h5>Orijinal Görüntü</h5>
+                <img id="originalImage" src="#" alt="Orijinal görüntü burada gösterilecek" style="display: none;">
+            </div>
+            <div class="image-box">
+                <h5>İşlenmiş Görüntü</h5>
+                <img id="outputImage" src="#" alt="İşlenmiş görüntü burada gösterilecek" style="display: none;">
+            </div>
+        </div>
+        <video id="video" autoplay></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('uploadForm');
+    const useCameraCheckbox = document.getElementById('useCamera');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const resultDiv = document.getElementById('result');
+    const outputImage = document.getElementById('outputImage');
+    const originalImage = document.getElementById('originalImage');
+    const loader = document.getElementById('loader');
+    const fileNameSpan = document.getElementById('fileName');
+
+    let useCamera = false;
+    let cameraImage = null;
+
+    useCameraCheckbox.addEventListener('change', (e) => {
+        useCamera = e.target.checked;
+        if (useCamera) {
+        document.getElementById('image').value = ''; 
+        fileNameSpan.textContent = ''; 
+        originalImage.src = ''; 
+        originalImage.style.display = 'none';
+        outputImage.src = ''; 
+        outputImage.style.display = 'none'; 
+        startCamera();
+        } else {
+            stopCamera();
+        }
+    });
+
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+        } catch (error) {
+            alert('Kameraya erişilemiyor: ' + error.message);
+        }
+    }
+
+    function stopCamera() {
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+        video.style.display = 'none';
+    }
+
+    // Resim yüklendiğinde dosya adını göster
+    document.getElementById('image').addEventListener('change', function () {
+        const fileName = this.files[0] ? this.files[0].name : '';
+        fileNameSpan.textContent = fileName ? `Yüklenen Dosya: ${fileName}` : '';
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loader.style.display = 'block';  // Loader göster
+
+        const formData = new FormData();
+        formData.append('type', document.getElementById('type').value);
+
+        if (useCamera) {
+            if (!cameraImage) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                cameraImage = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+            }
+            formData.append('image', cameraImage, 'camera.jpg');
+        } else {
+            const fileInput = document.getElementById('image');
+            if (fileInput.files.length > 0) {
+                formData.append('image', fileInput.files[0]);
+                // Orijinal resmi göster
+                const fileUrl = URL.createObjectURL(fileInput.files[0]);
+                originalImage.src = fileUrl;
+                originalImage.style.display = 'block';
+            } else {
+                alert('Lütfen bir resim seçin veya kamerayı kullanın.');
+                loader.style.display = 'none';  // Loader gizle
+                return;
+            }
+        }
+
+        try {
+            const response = await fetch('/process', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                outputImage.src = url;
+                outputImage.style.display = 'block';
+            } else {
+                alert('Hata: Görüntü işleme başarısız oldu.');
+            }
+        } catch (error) {
+            alert('Bir hata oluştu: ' + error.message);
+        }
+
+        loader.style.display = 'none';  // Loader gizle
+        stopCamera();
+    });
+</script>
+
+</body>
+</html>
